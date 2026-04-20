@@ -73,28 +73,39 @@ class AIService:
     def generate_course_curriculum(self, topic):
         prompt = f"""
         Konu: {topic}
-        Bu konu hakkında 5-7 derslik bir kurs müfredatı oluştur. 
-        Yanıtı SADECE şu formatta geçerli bir JSON listesi olarak ver (başka yazı ekleme):
+        Bu konu hakkında 5-7 derslik, profesyonel bir kurs müfredatı oluştur. 
+        Her ders için neden bu konunun öğrenilmesi gerektiğini (gerekçe) de belirt.
+        Yanıtı SADECE şu formatta geçerli bir JSON listesi olarak ver:
         [
-            {{"order": 1, "title": "Ders Başlığı"}},
+            {{
+                "order": 1, 
+                "title": "Ders Başlığı", 
+                "description": "Kısa özet",
+                "rationale": "Bu ders neden öğrenilmeli? Profesyonel hayatta ne işe yarar?"
+            }},
             ...
         ]
         """
         import json
         raw = self.generate_content(prompt)
         try:
-            # Clean possible markdown code blocks
             clean_raw = raw.replace("```json", "").replace("```", "").strip()
             return json.loads(clean_raw)
         except:
-            return [{"order": 1, "title": "Giriş"}]
+            return [{"order": 1, "title": "Giriş", "description": "Temel bilgiler", "rationale": "Konuya sağlam bir temel oluşturmak için."}]
 
     def generate_lesson_content(self, topic, lesson_title):
         prompt = f"""
-        Kurs Konusu: {topic}
-        Ders Başlığı: {lesson_title}
-        Lütfen bu ders için eğitici, detaylı ve profesyonel bir içerik yaz. 
-        Markdown formatını kullan. Türkçe karakterlere dikkat et.
+        Uzman Eğitmen Rolü: {topic} konusunda derinlemesine bilgi sahibisin.
+        Ders: {lesson_title}
+        
+        Talimatlar:
+        1. Profesyonel, sade ve akıcı bir dil kullan.
+        2. Bilgiyi sadece sunma, neden bu bilginin önemli olduğunu ve gerçek hayatta nasıl uygulandığını detaylandır.
+        3. Karmaşık kavramları basitleştirerek anlat.
+        4. Markdown formatını (başlıklar, listeler, vurgular) etkin kullan.
+        
+        İçeriği Türkçe olarak, en yüksek kalitede yaz.
         """
         return self.generate_content(prompt)
 
@@ -424,7 +435,8 @@ def main():
                     tabs = st.tabs([f"Ders {l.order}: {l.title}" for l in course.lessons])
                     for i, tab in enumerate(tabs):
                         with tab:
-                            st.markdown(f"<div class='glass-card' style='line-height: 1.8;'>{course.lessons[i].content}</div>", unsafe_allow_html=True)
+                            lesson = course.lessons[i]
+                            st.markdown(f"<div class='glass-card' style='line-height: 1.8;'>{lesson.content}</div>", unsafe_allow_html=True)
 
         elif choice == "💡 Rehber":
             st.markdown("<h1>💡 Nasıl Kullanılır?</h1>", unsafe_allow_html=True)
