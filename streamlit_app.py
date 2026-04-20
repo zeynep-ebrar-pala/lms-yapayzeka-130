@@ -9,6 +9,10 @@ from sqlalchemy.orm import sessionmaker, relationship
 from fpdf import FPDF
 import google.generativeai as genai
 from groq import Groq
+from dotenv import load_dotenv
+
+# --- Environment Setup ---
+load_dotenv()
 
 # --- Constants & Configuration ---
 DB_URL = "sqlite:///./lms_prod.db"
@@ -20,15 +24,15 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 class AIService:
     def __init__(self, provider="gemini"):
         self.provider = provider
+        
+        # Öncelik: Streamlit Secrets (Cloud), Sonra: os.getenv (Local/.env)
         self.gemini_key = os.getenv("GEMINI_API_KEY")
         self.groq_key = os.getenv("GROQ_API_KEY")
         
         try:
             if hasattr(st, "secrets"):
-                if "GEMINI_API_KEY" in st.secrets:
-                    self.gemini_key = st.secrets["GEMINI_API_KEY"]
-                if "GROQ_API_KEY" in st.secrets:
-                    self.groq_key = st.secrets["GROQ_API_KEY"]
+                self.gemini_key = st.secrets.get("GEMINI_API_KEY", self.gemini_key)
+                self.groq_key = st.secrets.get("GROQ_API_KEY", self.groq_key)
         except Exception:
             pass
         
