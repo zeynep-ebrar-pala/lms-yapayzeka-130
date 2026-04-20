@@ -42,8 +42,14 @@ class AIService:
             self.groq_client = Groq(api_key=self.groq_key)
 
     def generate_content(self, prompt, model_name=None):
-        # Denenecek aday modeller (En yeni ve profesyonelden, en kararlı modele doğru)
-        models_to_try = [model_name] if model_name else ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro']
+        # Genişletilmiş model listesi (Önekli ve öneksiz varyasyonlar dahil)
+        models_to_try = [model_name] if model_name else [
+            'gemini-1.5-flash', 
+            'models/gemini-1.5-flash',
+            'gemini-1.5-flash-latest', 
+            'gemini-pro',
+            'models/gemini-pro'
+        ]
         
         if self.provider == "gemini":
             if not self.gemini_key:
@@ -52,16 +58,17 @@ class AIService:
             last_err = ""
             for m_name in models_to_try:
                 try:
+                    # Temiz bir model ilklendirmesi
                     model = genai.GenerativeModel(m_name)
                     response = model.generate_content(prompt)
                     if response and response.text:
                         return response.text
                 except Exception as e:
                     last_err = str(e)
-                    # Herhangi bir hata durumunda (404, 500 vb.) sessizce bir sonraki modeli dene
+                    # Herhangi bir hatada (404, 500 vb.) sessizce bir sonrakine geç
                     continue
             
-            return f"Üzgünüz, şu an hizmet veremiyoruz. Lütfen biraz sonra tekrar deneyin. (Hata: {last_err})"
+            return f"Şu an bir teknik aksaklık yaşanıyor. Lütfen tekrar deneyin. (Hata Detayı: {last_err})"
 
         elif self.provider == "groq":
             try:
