@@ -38,24 +38,26 @@ class AIService:
             self.groq_client = Groq(api_key=self.groq_key)
 
     def generate_content(self, prompt, model_name=None):
+        # Denenecek aday modeller (En yeni ve profesyonelden, en kararlı modele doğru)
         models_to_try = [model_name] if model_name else ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro']
         
         if self.provider == "gemini":
             if not self.gemini_key:
                 return "Hata: GEMINI_API_KEY bulunamadı."
             
-            last_error = ""
+            last_err = ""
             for m_name in models_to_try:
                 try:
                     model = genai.GenerativeModel(m_name)
                     response = model.generate_content(prompt)
-                    return response.text
+                    if response and response.text:
+                        return response.text
                 except Exception as e:
-                    last_error = str(e)
-                    if "404" in last_error or "not found" in last_error.lower():
-                        continue # Bir sonraki modeli dene
-                    return f"Hata: {last_error}"
-            return f"Hata: Uygulama AI modeline bağlanamadı. Lütfen daha sonra tekrar deneyin. (Son hata: {last_error})"
+                    last_err = str(e)
+                    # Herhangi bir hata durumunda (404, 500 vb.) sessizce bir sonraki modeli dene
+                    continue
+            
+            return f"Üzgünüz, şu an hizmet veremiyoruz. Lütfen biraz sonra tekrar deneyin. (Hata: {last_err})"
 
         elif self.provider == "groq":
             try:
@@ -353,7 +355,7 @@ def main():
 
         if choice == "🏠 Ana Sayfa":
             st.markdown(f"<h1>Lumina AI Academy</h1>", unsafe_allow_html=True)
-            st.markdown("<div class='glass-card'><h3>Zekice Öğrenmeye Hemen Başlayın</h3>Öğrenmek istediğiniz başlığı yazın, saniyeler içinde size özel müfredat ve ders içerikleri hazırlayalım.</div>", unsafe_allow_html=True)
+            st.markdown("<div class='glass-card'><h3>Verimli Öğrenmeye Hemen Başlayın</h3>Öğrenmek istediğiniz başlığı yazın, saniyeler içinde size özel müfredat ve ders içerikleri hazırlayalım.</div>", unsafe_allow_html=True)
             
             # Aksiyon Kartları (Görsel Navigasyon)
             st.subheader("Hızlı Erişim")
