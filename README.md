@@ -1,109 +1,68 @@
-# 🎓 AI-Powered LMS — Yapay Zeka Destekli Akıllı Eğitim Platformu
+# 💎 Lumina AI Academy — Akıllı Öğrenme Deneyimi
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" />
-  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
-  <img src="https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" />
-  <img src="https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white" />
+  <img src="https://img.shields.io/badge/Status-Live%20&%20Stable-success?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/UI-Premium%20Warm-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/AI-Gemini%201.5%20Flash-4285F4?style=for-the-badge" />
 </p>
 
-> **Geliştiren:** ZEYNEP EBRAR PALA  
-> **Vizyon:** Herkes için, her an, her konuda kişiselleştirilmiş dijital akademi.
+Lumina AI Academy, öğrenme süreçlerini yapay zeka ile modernize eden, kişiselleştirilmiş ve zekice tasarlanmış bir Eğitim Yönetim Sistemidir (LMS). Bu platform, karmaşık müfredat süreçlerini saniyeler içinde zengin içerikli derslere dönüştürür.
 
 ---
 
-## 📂 PROJE YAPISI (Tree Model)
+## 🌐 CANLI UYGULAMA (Live Demo)
+Uygulamanın en güncel ve kararlı sürümüne aşağıdaki adresten ulaşabilirsiniz:
+👉 **[Lumina AI Academy Canlı İzle](https://lms-yapayzeka-130-ebii.streamlit.app/)**
+
+---
+
+## ✨ ÖNE ÇIKAN YENİLİKLER (V2.0)
+
+- 🎨 **Premium UI:** Zihne hitap eden sıcak krem ve altın tonlarından oluşan "Buzlu Cam" (Glassmorphism) arayüz.
+- 🚀 **AI Kurs Mimarı:** Herhangi bir konuyu girin, zekice bir ders planı ve içerikler saniyeler içinde hazırlansın.
+- 📚 **Kişisel Kütüphane:** Oluşturulan tüm kurslara anında erişim ve ders takibi.
+- 📑 **Akıllı Raporlama:** Kurs içeriklerini Türkçe karakter destekli profesyonel PDF formatında indirme imkanı.
+- 🛡️ **Stabilite Garantisi:** Modeller arası otomatik 'Fallback' (Yedeğe Geçiş) sistemi ile kesintisiz hizmet.
+
+---
+
+## 📂 PROJE MİMARİSİ (Ağaç Modeli)
 
 ```text
-lms-yapayzeka-130/
-├── 📄 streamlit_app.py       # ⭐ ANA UYGULAMA (Tek dosya - Canlı yayın/Deploy için)
-├── 📄 requirements.txt       # Gerekli kütüphaneler (pip install -r ...)
-├── 📄 .env                   # 🔑 API Anahtarları (Sadece burada tutulur)
-├── 📄 .gitignore             # Güvenlik için hariç tutulan dosyalar
-├── 📁 .pycache               # Python çalışma önbelleği
-│
-├── 🛠️ GELİŞMİŞ MİMARİ (Backend & Frontend Ayrı)
-│   ├── main.py               # FastAPI Backend Sunucusu (REST API)
-│   ├── app.py                # Streamlit Frontend (API üzerinden çalışır)
-│   ├── ai_service.py         # AI Servis Katmanı (Gemini 1.5 & Groq)
-│   ├── models.py             # Veritabanı Şemaları (User, Course, Lesson)
-│   └── database.py           # SQL Bağlantı Yönetimi
-│
-├── 🗄️ VERİTABANI
-│   └── lms.sqlite            # SQLite Veritabanı Dosyası
-└── 📖 README.md              # Proje Dökümantasyonu
+Lumina-AI-Academy/
+├── 📄 streamlit_app.py       # 🚀 ANA UYGULAMA (Monolitik / Profesyonel UI)
+├── 📄 requirements.txt       # 📦 Bağımlılıklar (google-generativeai==0.7.2)
+├── 📄 .env                   # 🔑 API Güvenlik Anahtarları
+├── 📄 lms_prod.db            # 🗄️ Üretim Veritabanı (SQLite)
+├── 📄 DejaVuSans.ttf         # 🖋️ PDF Türkçe Font Desteği
+└── 🛠️ Dağıtık Sistem Dosyaları (Backend/Frontend Ayrık Kullanım İçin)
+    ├── main.py, app.py, ai_service.py, models.py, database.py
 ```
 
 ---
 
-## 🌟 PROJE ÖZETİ VE MANTIK AKIŞI
+## 🛠️ TEKNOLOJİ YIĞINI
 
-Bu sistem, karmaşık eğitim süreçlerini yapay zeka yardımıyla otomatikleştirir. Projede iki farklı çalışma mantığı sunulmuştur:
-
-1.  **Hızlı Yayın (Monolitik):** `streamlit_app.py` dosyası her şeyi (arayüz, veritabanı, AI) içinde barındırır. Streamlit Cloud gibi platformlarda saniyeler içinde yayına almak için tasarlanmıştır.
-2.  **Profesyonel Mimari (Dağıtık):** `main.py` (Backend) ve `app.py` (Frontend) ayrılmıştır. Bu sayede sistem ölçeklenebilir ve farklı arayüzlere (mobil uygulama vb.) hizmet verebilir hale getirilmiştir.
-
----
-
-## ✨ ÖNE ÇIKAN ÖZELLİKLER
-
-| Özellik | Teknik Detay |
+| Katman | Teknoloji |
 |---|---|
-| 🧠 **Zeki Müfredat** | Google Gemini 1.5 Flash ile saniyeler içinde konu analizi ve ders planı. |
-| ⚡ **Yıldırım Hızı** | Groq Llama 3.3 entegrasyonu ile anlık içerik üretimi. |
-| 🔐 **Maksimum Güvenlik** | API anahtarları asla kodda tutulmaz, `.env` veya `Secrets` üzerinden okunur. |
-| 📄 **Eğitim Raporu** | Oluşturulan kurslar tek tıkla PDF formatında indirilebilir. |
-| 🌓 **Modern UI** | Koyu tema (Dark Mode) odaklı, kullanıcı dostu premium arayüz. |
+| **Frontend/Backend** | [Streamlit](https://streamlit.io/) & Python 3.10+ |
+| **Yapay Zeka** | Google Gemini 1.5 & Groq Llama 3.3 |
+| **Veritabanı** | SQLAlchemy & SQLite |
+| **Dökümantasyon** | FPDF2 (UTF-8 Destekli) |
+| **Styling** | Custom Premium CSS (Warm Theme) |
 
 ---
 
-## 🚀 KURULUM VE BAŞLATMA
+## 🚀 HIZLI BAŞLANGIÇ
 
-### 1. Bağımlılıkları Yükleyin
-```bash
-pip install -r requirements.txt
-```
-
-### 2. API Anahtarlarını Ayarlayın
-Proje dizinindeki `.env` dosyasını açın ve anahtarlarınızı girin:
-```env
-GEMINI_API_KEY=AIzaSy...
-GROQ_API_KEY=gsk_...
-```
-
-### 3. Uygulamayı Çalıştırın
-
-**Seçenek A: Tek Dosya (Önerilen/Hızlı)**
-```bash
-streamlit run streamlit_app.py
-```
-
-**Seçenek B: Dağıtık Sistem (Backend + Frontend)**
-```bash
-# Terminal 1:
-python main.py
-
-# Terminal 2:
-streamlit run app.py
-```
+1. **Bağımlılıkları Kur:** `pip install -r requirements.txt`
+2. **API Anahtarlarını Ayarla:** `.env` dosyasına `GEMINI_API_KEY` ve `GROQ_API_KEY` bilgilerini ekle.
+3. **Başlat:** `streamlit run streamlit_app.py`
 
 ---
 
-## ☁️ STREAMLIT CLOUD'DA YAYINLAMA (DEPLOY)
-
-1.  GitHub'a projenizi yükleyin.
-2.  Streamlit Cloud'da yeni uygulama oluşturun ve `streamlit_app.py` dosyasını seçin.
-3.  **Advanced Settings > Secrets** kısmına `.env` içindeki anahtarları eklemeyi unutmayın!
+## ✍️ GELİŞTİRİCİ
+Bu proje **ZEYNEP EBRAR PALA** tarafından, eğitim teknolojilerini yapay zeka ile bir üst seviyeye taşımak amacıyla geliştirilmiştir. Modern tasarımı ve teknik sağlamlığı ile yayındadır.
 
 ---
-
-## ⚠️ GÜVENLİK VE GİZLİLİK
-
-*   **API Anahtarları:** Proje kodları içinde hiçbir API anahtarı barındırılmaz. Tüm anahtarlar `os.getenv` ile güvenli şekilde çekilir.
-*   **Veri Saklama:** Kullanıcı şifreleri `SHA-256` ile özetlenerek (hash) saklanır, asla açık metin olarak tutulmaz.
-
----
-
-## ✍️ LİSANS VE GELİŞTİRİCİ
-Bu proje **ZEYNEP EBRAR PALA** tarafından eğitim teknolojilerinde yapay zeka kullanımını modernize etmek amacıyla geliştirilmiştir. Tüm hakları saklıdır.
+<p align="center"><i>© 2026 Lumina AI Academy - Developed with ❤️ by Zeynep Ebrar Pala</i></p>

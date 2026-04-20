@@ -38,23 +38,37 @@ class AIService:
             self.groq_client = Groq(api_key=self.groq_key)
 
     def generate_content(self, prompt, model_name=None):
-        try:
-            if self.provider == "gemini":
-                if not self.gemini_key:
-                    return "Hata: GEMINI_API_KEY bulunamadı. Lütfen .env dosyasını veya Streamlit Secrets ayarlarını kontrol edin."
-                model = genai.GenerativeModel(model_name or 'gemini-1.5-flash')
-                response = model.generate_content(prompt)
-                return response.text
-            elif self.provider == "groq":
+        models_to_try = [model_name] if model_name else ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro']
+        
+        if self.provider == "gemini":
+            if not self.gemini_key:
+                return "Hata: GEMINI_API_KEY bulunamadı."
+            
+            last_error = ""
+            for m_name in models_to_try:
+                try:
+                    model = genai.GenerativeModel(m_name)
+                    response = model.generate_content(prompt)
+                    return response.text
+                except Exception as e:
+                    last_error = str(e)
+                    if "404" in last_error or "not found" in last_error.lower():
+                        continue # Bir sonraki modeli dene
+                    return f"Hata: {last_error}"
+            return f"Hata: Uygulama AI modeline bağlanamadı. Lütfen daha sonra tekrar deneyin. (Son hata: {last_error})"
+
+        elif self.provider == "groq":
+            try:
                 if not self.groq_key:
-                    return "Hata: GROQ_API_KEY bulunamadı. Lütfen .env dosyasını veya Streamlit Secrets ayarlarını kontrol edin."
+                    return "Hata: GROQ_API_KEY bulunamadı."
                 chat_completion = self.groq_client.chat.completions.create(
                     messages=[{"role": "user", "content": prompt}],
                     model=model_name or "llama-3.3-70b-versatile",
                 )
                 return chat_completion.choices[0].message.content
-        except Exception as e:
-            return f"Hata: {str(e)}"
+            except Exception as e:
+                return f"Hata (Groq): {str(e)}"
+        return "AI sağlayıcısı seçilmedi."
 
     def generate_course_curriculum(self, topic):
         prompt = f"""
