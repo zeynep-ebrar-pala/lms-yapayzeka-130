@@ -255,8 +255,8 @@ def main():
         with col_img:
             st.markdown("""
             <div class='glass-card' style='margin-top: 50px;'>
-                <h1 style='font-size: 3rem;'>🎓 AI LMS</h1>
-                <p style='font-size: 1.2rem; color: #8e7d77;'>Zeynep Ebrar Pala tarafından geliştirilen <b>Yapay Zeka Destekli Akıllı Öğrenme Platformu</b>'na hoş geldiniz.</p>
+                <h1 style='font-size: 3rem;'>🎓 Lumina AI</h1>
+                <p style='font-size: 1.2rem; color: #8e7d77;'>Yeni Nesil <b>Yapay Zeka Destekli Öğrenme Platformu</b>'na hoş geldiniz.</p>
                 <hr style='border: 0.5px solid #d4a373;'>
                 <h3 style='margin-top: 20px;'>Neler Yapabilirsiniz?</h3>
                 <ul style='list-style: none; padding-left: 0;'>
@@ -327,11 +327,11 @@ def main():
         choice = st.session_state["menu_choice"]
 
         if choice == "🏠 Ana Sayfa":
-            st.markdown(f"<h1>Zeynep Ebrar Pala - Kişisel Akademiniz</h1>", unsafe_allow_html=True)
-            st.markdown("<div class='glass-card'><h3>İstediğiniz Her Şeyi Öğrenmeye Hazır Mısınız?</h3>Öğrenmek istediğiniz başlığı yazın, gerisini yapay zekaya bırakın.</div>", unsafe_allow_html=True)
+            st.markdown(f"<h1>Lumina AI Academy</h1>", unsafe_allow_html=True)
+            st.markdown("<div class='glass-card'><h3>Zekice Öğrenmeye Hemen Başlayın</h3>Öğrenmek istediğiniz başlığı yazın, saniyeler içinde size özel müfredat ve ders içerikleri hazırlayalım.</div>", unsafe_allow_html=True)
             
             # Aksiyon Kartları (Görsel Navigasyon)
-            st.subheader("Ne yapalım?")
+            st.subheader("Hızlı Erişim")
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -354,10 +354,9 @@ def main():
 
         elif choice == "🤖 AI Kurs Mimarı":
             st.markdown("<h1>🚀 AI Kurs Mimarı</h1>", unsafe_allow_html=True)
-            st.info("İpucu: Ne kadar spesifik bir konu girerseniz, ders içerikleri o kadar kaliteli olur.")
             
             with st.container():
-                st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+                st.info("İpucu: Ne kadar spesifik bir konu girerseniz (örn: 'Python ile Veri Analizi'), içerikler o kadar kaliteli olur.")
                 topic = st.text_input("Öğrenmek istediğiniz konu nedir?", placeholder="Örn: Modern Japon Edebiyatı")
                 if st.button("✨ Kursu Tasarla ve İçerikleri Yaz"):
                     if topic:
@@ -383,7 +382,6 @@ def main():
                         st.success(f"🎉 '{topic}' kursu kütüphanenize eklendi.")
                     else:
                         st.warning("Lütfen bir konu başlığı girin.")
-                st.markdown("</div>", unsafe_allow_html=True)
 
         elif choice == "📚 Kurslarım":
             st.markdown("<h1>📚 Kütüphanem</h1>", unsafe_allow_html=True)
@@ -391,11 +389,9 @@ def main():
             if not courses:
                 st.info("Kütüphaneniz henüz boş. 'AI Kurs Mimarı' ile ilk kursunuzu oluşturun.")
             else:
-                st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
                 titles = [c.title for c in courses]
                 selected = st.selectbox("Çalışmak istediğiniz kursu seçin:", titles)
                 course = db.query(Course).filter(Course.title == selected).first()
-                st.markdown("</div>", unsafe_allow_html=True)
                 
                 if course:
                     col_info, col_download = st.columns([3, 1])
@@ -431,6 +427,13 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
+    # --- Footer ---
+    st.markdown("""
+    <div style='text-align: center; margin-top: 50px; padding: 20px; color: #8e7d77; border-top: 1px solid rgba(0,0,0,0.05);'>
+        Advanced AI Learning Management System<br>
+        <b>Developed with ❤️ by Zeynep Ebrar Pala</b>
+    </div>
+    """, unsafe_allow_html=True)
     db.close()
 
 if __name__ == "__main__":
