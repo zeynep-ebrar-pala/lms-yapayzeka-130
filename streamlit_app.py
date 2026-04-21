@@ -25,7 +25,7 @@ class AIService:
     def __init__(self, provider="gemini"):
         self.provider = provider
         
-        # Öncelik: Streamlit Secrets (Cloud), Sonra: os.getenv (Local/.env)
+        # Priority: Streamlit Secrets (Cloud), then os.getenv (Local/.env)
         self.gemini_key = os.getenv("GEMINI_API_KEY")
         self.groq_key = os.getenv("GROQ_API_KEY")
         
@@ -42,33 +42,25 @@ class AIService:
             self.groq_client = Groq(api_key=self.groq_key)
 
     def generate_content(self, prompt, model_name=None):
-        # Genişletilmiş model listesi (Önekli ve öneksiz varyasyonlar dahil)
-        models_to_try = [model_name] if model_name else [
-            'gemini-1.5-flash', 
-            'models/gemini-1.5-flash',
-            'gemini-1.5-flash-latest', 
-            'gemini-pro',
-            'models/gemini-pro'
-        ]
-        
         if self.provider == "gemini":
             if not self.gemini_key:
-                return "Hata: GEMINI_API_KEY bulunamadı."
+                return "Hata: GEMINI_API_KEY bulunamadı. Lütfen Ayarlar kısmından veya .env dosyasından anahtarınızı kontrol edin."
             
-            last_err = ""
-            for m_name in models_to_try:
-                try:
-                    # Temiz bir model ilklendirmesi
-                    model = genai.GenerativeModel(m_name)
-                    response = model.generate_content(prompt)
-                    if response and response.text:
-                        return response.text
-                except Exception as e:
-                    last_err = str(e)
-                    # Herhangi bir hatada (404, 500 vb.) sessizce bir sonrakine geç
-                    continue
-            
-            return f"Şu an bir teknik aksaklık yaşanıyor. Lütfen tekrar deneyin. (Hata Detayı: {last_err})"
+            # Use modern Gemini 1.5 models
+            m_name = model_name or 'gemini-1.5-flash'
+            try:
+                model = genai.GenerativeModel(m_name)
+                response = model.generate_content(prompt)
+                if response and response.text:
+                    return response.text
+                return "Yapay zeka boş bir yanıt döndürdü. Lütfen tekrar deneyin."
+            except Exception as e:
+                err_msg = str(e)
+                if "leaked" in err_msg.lower():
+                    return "⚠️ Hata: Gemini API anahtarınız sızdırılmış (leaked) olarak işaretlenmiş ve Google tarafından devre dışı bırakılmış. Lütfen Google AI Studio'dan yeni bir anahtar alıp güncelleyin."
+                if "404" in err_msg:
+                    return f"⚠️ Hata: '{m_name}' modeli bulunamadı veya bu bölgede desteklenmiyor. (404)"
+                return f"⚠️ Teknik bir aksaklık oluştu: {err_msg}"
 
         elif self.provider == "groq":
             try:
@@ -80,45 +72,56 @@ class AIService:
                 )
                 return chat_completion.choices[0].message.content
             except Exception as e:
-                return f"Hata (Groq): {str(e)}"
+                return f"⚠️ Hata (Groq): {str(e)}"
         return "AI sağlayıcısı seçilmedi."
 
     def generate_course_curriculum(self, topic):
         prompt = f"""
+        Rol: Uzman Eğitim Tasarımcısı
         Konu: {topic}
-        Bu konu hakkında 5-7 derslik, profesyonel bir kurs müfredatı oluştur. 
-        Her ders için neden bu konunun öğrenilmesi gerektiğini (gerekçe) de belirt.
-        Yanıtı SADECE şu formatta geçerli bir JSON listesi olarak ver:
+        
+        Talimatlar:
+        1. Bu konu hakkında 6-8 derslik, profesyonel bir kurs müfredatı oluştur.
+        2. Her ders için 'rationale' (gerekçe) alanında bu dersin neden önemli olduğunu ve profesyonel hayatta nasıl fark yaratacağını açıkla.
+        3. Yanıt sadece geçerli bir JSON listesi olmalıdır.
+        
+        Format:
         [
             {{
                 "order": 1, 
                 "title": "Ders Başlığı", 
-                "description": "Kısa özet",
-                "rationale": "Bu ders neden öğrenilmeli? Profesyonel hayatta ne işe yarar?"
-            }},
-            ...
+                "description": "Kapsamlı kısa özet",
+                "rationale": "Bu dersin öğrenilme nedeni ve faydası"
+            }}
         ]
         """
         import json
         raw = self.generate_content(prompt)
         try:
-            clean_raw = raw.replace("```json", "").replace("```", "").strip()
+            # Clean JSON formatting if AI adds markdown blocks
+            clean_raw = raw.strip()
+            if "```json" in clean_raw:
+                clean_raw = clean_raw.split("```json")[1].split("```")[0].strip()
+            elif "```" in clean_raw:
+                clean_raw = clean_raw.split("```")[1].split("```")[0].strip()
+            
             return json.loads(clean_raw)
-        except:
-            return [{"order": 1, "title": "Giriş", "description": "Temel bilgiler", "rationale": "Konuya sağlam bir temel oluşturmak için."}]
+        except Exception as e:
+            st.error(f"JSON Ayrıştırma Hatası: {str(e)}")
+            return [{"order": 1, "title": "Giriş: " + topic, "description": "Temel kavramlar ve genel bakış.", "rationale": "Sağlam bir temel oluşturmak her zaman en kritik adımdır."}]
 
     def generate_lesson_content(self, topic, lesson_title):
         prompt = f"""
-        Uzman Eğitmen Rolü: {topic} konusunda derinlemesine bilgi sahibisin.
+        Uzman Eğitmen Rolü: {topic} konusunda dünya standartlarında bir uzmansın.
         Ders: {lesson_title}
         
         Talimatlar:
-        1. Profesyonel, sade ve akıcı bir dil kullan.
-        2. Bilgiyi sadece sunma, neden bu bilginin önemli olduğunu ve gerçek hayatta nasıl uygulandığını detaylandır.
-        3. Karmaşık kavramları basitleştirerek anlat.
-        4. Markdown formatını (başlıklar, listeler, vurgular) etkin kullan.
+        1. Profesyonel, ilham verici ve derinlemesine bir içerik yaz.
+        2. Sadece bilgi verme; gerçek dünya senaryoları, ipuçları ve 'pro-tip'ler ekle.
+        3. Markdown kullanarak görsel hiyerarşi oluştur (başlıklar, kalın yazılar, listeler).
+        4. Okuyucuyu sıkmayan ama dolu dolu bir içerik hazırla.
         
-        İçeriği Türkçe olarak, en yüksek kalitede yaz.
+        Ders içeriğini Türkçe olarak en yüksek kalitede yaz.
         """
         return self.generate_content(prompt)
 
@@ -207,78 +210,141 @@ def main():
     init_db()
     db = SessionLocal()
 
-    # --- Custom Styling (Sıcak & Premium Tema) ---
+    # --- Custom Styling (Premium & Modern) ---
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:wght@700&display=swap');
         
+        :root {
+            --primary: #c9a07a;
+            --secondary: #7d5a50;
+            --background: #fffcf9;
+            --accent: #faedcd;
+            --text: #4a4a4a;
+            --glass: rgba(255, 255, 255, 0.45);
+        }
+
         html, body, [data-testid="stAppViewContainer"] {
             font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #fffcf9 0%, #f7e8d0 100%) !important;
-            color: #4a4a4a;
+            background: radial-gradient(circle at top right, #fffcf9, #f7e8d0) !important;
+            color: var(--text);
         }
         
         .stApp {
             background-color: transparent;
         }
 
+        /* Hero Title */
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            background: linear-gradient(45deg, #7d5a50, #c9a07a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
         /* Glassmorphism Cards */
         .glass-card {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 35px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 40px rgba(125, 90, 80, 0.08);
             margin-bottom: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(125, 90, 80, 0.12);
         }
 
         h1, h2, h3 {
-            color: #7d5a50 !important;
+            color: var(--secondary) !important;
             font-weight: 600;
         }
 
+        /* Buttons */
         .stButton>button {
-            border-radius: 12px;
-            background: linear-gradient(45deg, #d4a373, #faedcd);
-            color: #7d5a50;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #d4a373 0%, #c9a07a 100%);
+            color: white !important;
             border: none;
+            padding: 0.75rem 1.5rem;
             font-weight: 600;
-            transition: all 0.3s ease;
-            height: 3.5em;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            height: auto;
+            min-height: 3.5rem;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(212, 163, 115, 0.3);
         }
 
         .stButton>button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-            color: #fff;
-            background: #d4a373;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(212, 163, 115, 0.4);
+            background: linear-gradient(135deg, #bc8a5f 0%, #a67c52 100%);
         }
 
         /* Sidebar Styling */
         [data-testid="stSidebar"] {
-            background-color: rgba(255, 252, 249, 0.9) !important;
+            background-color: rgba(255, 252, 249, 0.95) !important;
             border-right: 1px solid #f2e1c1;
         }
+        
+        .sidebar-user {
+            text-align: center;
+            padding: 20px;
+            background: var(--accent);
+            border-radius: 20px;
+            margin: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
 
+        /* Navigation Cards */
         .nav-card {
             cursor: pointer;
             text-align: center;
-            padding: 20px;
-            background: #fff;
-            border-radius: 15px;
+            padding: 25px;
+            background: white;
+            border-radius: 20px;
             border: 1px solid #faedcd;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
         }
         .nav-card:hover {
-            background: #faedcd;
-            transform: scale(1.02);
+            background: #fff9f0;
+            border-color: #d4a373;
+            transform: scale(1.03);
         }
         
         .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* Progress Bar Animation */
+        .stProgress > div > div > div > div {
+            background-color: var(--primary);
+            background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem;
+        }
+
+        /* Tabs */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 10px;
+            background-color: transparent;
+        }
+        .stTabs [data-baseweb="tab"] {
+            height: 50px;
+            white-space: pre-wrap;
+            background-color: var(--glass);
+            border-radius: 12px 12px 0 0;
+            gap: 1px;
+            padding-top: 10px;
+            padding-bottom: 10px;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -289,19 +355,30 @@ def main():
         st.session_state["menu_choice"] = "🏠 Ana Sayfa"
 
     if st.session_state["user"] is None:
-        col_img, col_form = st.columns([1, 1])
+        col_img, col_form = st.columns([1.2, 1])
         with col_img:
             st.markdown("""
-            <div class='glass-card' style='margin-top: 50px;'>
-                <h1 style='font-size: 3rem;'>🎓 Lumina AI</h1>
-                <p style='font-size: 1.2rem; color: #8e7d77;'>Yeni Nesil <b>Yapay Zeka Destekli Öğrenme Platformu</b>'na hoş geldiniz.</p>
-                <hr style='border: 0.5px solid #d4a373;'>
-                <h3 style='margin-top: 20px;'>Neler Yapabilirsiniz?</h3>
-                <ul style='list-style: none; padding-left: 0;'>
-                    <li style='margin-bottom: 15px;'>🚀 <b>Hızlı Kurs Oluşturma:</b> Sadece konuyu söyleyin, müfredatınız hazır olsun.</li>
-                    <li style='margin-bottom: 15px;'>🤖 <b>Yapay Zeka Eğitmenler:</b> En güncel modellerle etkileşimli içerikler.</li>
-                    <li style='margin-bottom: 15px;'>📑 <b>Kişisel Kütüphane:</b> Tüm eğitimlerinizi saklayın ve PDF olarak indirin.</li>
-                </ul>
+            <div class='glass-card' style='margin-top: 40px;'>
+                <div class='hero-title'>Lumina AI</div>
+                <h2 style='font-size: 1.5rem; color: #8e7d77; margin-bottom: 20px;'>Yapay Zeka Destekli Kişiselleştirilmiş Akademi</h2>
+                <p style='font-size: 1.1rem; color: #4a4a4a; line-height: 1.6;'>
+                    Öğrenmek istediğiniz başlığı yazın, <b>saniyeler içinde</b> size özel müfredat ve profesyonel ders içerikleri hazırlayalım.
+                </p>
+                <hr style='border: 0.5px solid #d4a373; margin: 25px 0;'>
+                <div style='display: flex; flex-direction: column; gap: 15px;'>
+                    <div style='display: flex; align-items: center; gap: 15px;'>
+                        <span style='font-size: 1.5rem;'>🚀</span>
+                        <span><b>Hızlı Kurs Tasarımı:</b> Zaman kaybetmeden hedefe yönelik müfredat.</span>
+                    </div>
+                    <div style='display: flex; align-items: center; gap: 15px;'>
+                        <span style='font-size: 1.5rem;'>🤖</span>
+                        <span><b>AI Eğitmenler:</b> En güncel modellerle (Gemini & Groq) etkileşimli içerik.</span>
+                    </div>
+                    <div style='display: flex; align-items: center; gap: 15px;'>
+                        <span style='font-size: 1.5rem;'>📑</span>
+                        <span><b>PDF Kütüphanesi:</b> Eğitimlerinizi saklayın ve dilediğiniz an indirin.</span>
+                    </div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
 

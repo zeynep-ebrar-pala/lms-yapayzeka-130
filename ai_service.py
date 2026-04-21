@@ -20,9 +20,14 @@ class AIService:
 
     def generate_content(self, prompt, model_name=None):
         if self.provider == "gemini":
-            model = genai.GenerativeModel(model_name or 'gemini-1.5-flash')
-            response = model.generate_content(prompt)
-            return response.text
+            try:
+                # Modern model name
+                current_model = model_name or 'gemini-1.5-flash'
+                model = genai.GenerativeModel(current_model)
+                response = model.generate_content(prompt)
+                return response.text
+            except Exception as e:
+                return f"Error with Gemini ({current_model}): {str(e)}"
         elif self.provider == "groq":
             completion = self.groq_client.chat.completions.create(
                 model=model_name or "llama-3.3-70b-versatile",
